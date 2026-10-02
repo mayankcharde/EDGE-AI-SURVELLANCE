@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.env
+# data/events.db
+# data/snapshots/*
+# data/clips/*
+# data/known_faces/*
+# logs/*
+# *.pkl
+# !data/known_faces/.gitkeep
+# !data/snapshots/.gitkeep
+# !data/clips/.gitkeep
+# !logs/.gitkeep
+# models/*.pt
+
+data/uploads/*
+!data/uploads/.gitkeep

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Surveillance Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="glass-panel main-header">
+        <div class="brand">
+          <div class="logo-icon">🛡️</div>
+          <h1>AI Surveillance</h1>
+        </div>
+        <div class="stats" id="stats">
+          <span class="loading-pulse">Loading stats...</span>
+        </div>
+      </header>
+
+      <!-- Sidebar Controls -->
+      <aside class="sidebar">
+        <!-- Video Source Control -->
+        <section class="glass-panel control-section">
+          <h2>🎥 Video Source</h2>
+          <div class="source-status">
+            Current: <span id="current-source" class="highlight-text">—</span>
+            <div id="video-progress"></div>
+          </div>
+          
+          <div class="source-actions">
+            <button id="btn-webcam" class="btn btn-outline">💻 Laptop Webcam</button>
+            
+            <div class="input-group">
+              <input type="text" id="rtsp-input" class="glass-input" placeholder="rtsp://... or IP URL" />
+              <button id="btn-rtsp" class="btn btn-primary">Connect</button>
+            </div>
+            
+            <label class="btn btn-gradient upload-label">
+              📁 Upload Demo Video
+              <input type="file" id="video-file" accept="video/*" hidden />
+            </label>
+            <div id="upload-status" class="status-msg"></div>
+          </div>
+        </section>
+
+        <!-- Filters -->
+        <section class="glass-panel control-section">
+          <h2>🎯 Filters & Options</h2>
+          <div class="filter-group">
+            <label>Event Type</label>
+            <div class="select-wrapper">
+              <select id="filter-event" class="glass-select">
+                <option value="">All Events</option>
+                <option value="INTRUSION">Intrusion</option>
+                <option value="LOITERING">Loitering</option>
+                <option value="RUNNING">Running</option>
+                <option value="FALL">Fall</option>
+                <option value="UNUSUAL_MOVEMENT">Unusual Movement</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>Severity</label>
+            <div class="select-wrapper">
+              <select id="filter-severity" class="glass-select">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="action-row">
+            <button id="refresh" class="btn btn-secondary">🔄 Refresh</button>
+            <label class="toggle-switch">
+              <input type="checkbox" id="auto" checked />
+              <span class="slider"></span>
+              <span class="toggle-label">Auto-refresh</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Event Dictionary Legend -->
+        <section class="glass-panel control-section legend">
+          <h2>📖 Event Dictionary</h2>
+          <ul class="legend-list">
+            <li><span class="dot dot-intrusion"></span> <strong>Intrusion</strong>: Enters forbidden zone.</li>
+            <li><span class="dot dot-loitering"></span> <strong>Loitering</strong>: Stays in zone too long.</li>
+            <li><span class="dot dot-running"></span> <strong>Running</strong>: Abnormal speed.</li>
+            <li><span class="dot dot-fall"></span> <strong>Fall</strong>: Sudden drop to ground.</li>
+            <li><span class="dot dot-unusual"></span> <strong>Unusual Mvmt</strong>: Erratic wandering.</li>
+          </ul>
+        </section>
+      </aside>
+
+      <!-- Main Content / Data Table -->
+      <main class="main-content glass-panel">
+        <div class="table-header">
+          <h2>Live Security Events</h2>
+          <div class="live-indicator">
+            <div class="pulse-dot"></div> Live Monitoring
+          </div>
+        </div>
+
+        <!-- Live Video Stream Feed -->
+        <div class="video-feed-container" style="text-align:center; margin-bottom: 20px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);">
+            <img src="/video_feed" id="live-video" style="max-width: 100%; max-height: 50vh; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" alt="Live Surveillance Feed" />
+        </div>
+
+        <div class="table-responsive">
+          <table id="events-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Time</th>
+                <th>Camera</th>
+                <th>Subject</th>
+                <th>Event</th>
+                <th>Severity</th>
+                <th>Confidence</th>
+                <th>Explanation</th>
+                <th>Snapshot</th>
+              </tr>
+            </thead>
+            <tbody id="events-body">
+              <!-- JS Populated -->
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+
+    <!-- Event Detail Modal (Glassmorphic) -->
+    <div class="modal" id="modal">
+      <div class="modal-content glass-panel">
+        <div class="modal-header">
+          <h2 id="modal-title">Event Details</h2>
+          <button class="close-btn" id="modal-close">&times;</button>
+        </div>
+        <div id="modal-body" class="modal-body scrollable"></div>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

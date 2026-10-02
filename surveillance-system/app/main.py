@@ -269,7 +269,28 @@ def health():
 
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 import cv2
+import numpy as np
 import time
+
+
+def _no_camera_frame():
+    """Generate a placeholder image when no camera source is active."""
+    img = np.zeros((480, 640, 3), dtype=np.uint8)
+    img[:] = (20, 17, 13)  # dark bg matching the UI
+    # Draw a camera icon outline
+    cv2.rectangle(img, (270, 190), (370, 260), (80, 80, 80), 2)
+    cv2.circle(img, (320, 225), 20, (80, 80, 80), 2)
+    cv2.circle(img, (320, 225), 8, (80, 80, 80), -1)
+    # Text
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    text = "No Camera Active"
+    (tw, th), _ = cv2.getTextSize(text, font, 0.7, 2)
+    cv2.putText(img, text, ((640 - tw) // 2, 300), font, 0.7, (100, 100, 100), 2, cv2.LINE_AA)
+    text2 = "Select a source from the sidebar"
+    (tw2, _), _ = cv2.getTextSize(text2, font, 0.45, 1)
+    cv2.putText(img, text2, ((640 - tw2) // 2, 330), font, 0.45, (70, 70, 70), 1, cv2.LINE_AA)
+    return img
+
 
 @app.get("/video_feed")
 def video_feed():
@@ -281,6 +302,13 @@ def video_feed():
                 if ret:
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            else:
+                # Show placeholder when no camera is active
+                placeholder = _no_camera_frame()
+                ret, buffer = cv2.imencode('.jpg', placeholder)
+                if ret:
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
             time.sleep(0.05)
     return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 
@@ -289,13 +317,29 @@ def api_source():
     p = pipeline_ref["instance"]
     info = {
         "current": pipeline_ref["current_source"],
+        "active": p is not None and p.camera is not None,
         "config_type": SOURCE_TYPE,
         "config_rtsp": RTSP_URL,
         "config_webcam": WEBCAM_INDEX,
     }
-    if p and p.camera.is_file:
+    if p and p.camera and p.camera.is_file:
         info["progress"] = p.camera.get_progress()
     return info
+
+
+@app.post("/api/source/stop")
+def stop_source():
+    """Disconnect the current camera source."""
+    p = pipeline_ref["instance"]
+    if p and p.camera:
+        try:
+            p.camera.stop()
+        except Exception:
+            pass
+        p.camera = None
+        p.latest_frame = None
+    pipeline_ref["current_source"] = None
+    return {"status": "ok", "source": None}
 
 
 @app.post("/api/source/webcam")

@@ -1,154 +1,390 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Surveillance Dashboard</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/style.css" />
-  </head>
-  <body>
-    <div class="dashboard-container">
-      <!-- Header -->
-      <header class="glass-panel main-header">
-        <div class="brand">
-          <div class="logo-icon">🛡️</div>
-          <h1>AI Surveillance</h1>
-        </div>
-        <div class="stats" id="stats">
-          <span class="loading-pulse">Loading stats...</span>
-        </div>
-      </header>
 
-      <!-- Sidebar Controls -->
-      <aside class="sidebar">
-        <!-- Video Source Control -->
-        <section class="glass-panel control-section">
-          <h2>🎥 Video Source</h2>
-          <div class="source-status">
-            Current: <span id="current-source" class="highlight-text">—</span>
-            <div id="video-progress"></div>
-          </div>
-          
-          <div class="source-actions">
-            <button id="btn-webcam" class="btn btn-outline">💻 Laptop Webcam</button>
-            
-            <div class="input-group">
-              <input type="text" id="rtsp-input" class="glass-input" placeholder="rtsp://... or IP URL" />
-              <button id="btn-rtsp" class="btn btn-primary">Connect</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Edge AI Surveillance System — Real-time intelligent security monitoring with behavior detection, face recognition, and XAI explanations." />
+  <title>Edge AI Surveillance — Command Center</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <!-- Ambient Background Effects -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="app-shell">
+    <!-- ===== SIDEBAR ===== -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-mark">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="url(#logo-grad)" />
+            <path d="M16 8L22 12V20L16 24L10 20V12L16 8Z" stroke="white" stroke-width="1.5" fill="none" />
+            <circle cx="16" cy="16" r="3" fill="white" opacity="0.9" />
+            <defs>
+              <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
+                <stop stop-color="#6366f1" />
+                <stop offset="1" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">SENTINEL</span>
+          <span class="logo-sub">Edge AI</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-body">
+        <!-- Navigation -->
+        <div class="nav-section">
+          <span class="nav-label">MONITORING</span>
+          <a class="nav-item active" href="#" data-section="live">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="10 8 16 12 10 16 10 8" />
+              </svg>
+            </span>
+            <span class="nav-text">Live Feed</span>
+          </a>
+          <a class="nav-item" href="#" data-section="events">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </span>
+            <span class="nav-text">Events Log</span>
+            <span class="nav-badge" id="event-count-badge">0</span>
+          </a>
+        </div>
+
+        <!-- Source Control -->
+        <div class="nav-section">
+          <span class="nav-label">SOURCE CONTROL</span>
+          <div class="source-card">
+            <div class="source-status-bar">
+              <div class="source-dot" id="source-dot"></div>
+              <span class="source-current" id="current-source">Connecting…</span>
             </div>
-            
-            <label class="btn btn-gradient upload-label">
-              📁 Upload Demo Video
-              <input type="file" id="video-file" accept="video/*" hidden />
-            </label>
-            <div id="upload-status" class="status-msg"></div>
+            <div id="video-progress" class="source-progress"></div>
+
+            <div class="source-actions">
+              <button id="btn-webcam" class="ctrl-btn" title="Switch to laptop webcam">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                <span>Webcam</span>
+              </button>
+
+              <div class="rtsp-group">
+                <input type="text" id="rtsp-input" class="ctrl-input" placeholder="rtsp://… or IP" />
+                <button id="btn-rtsp" class="ctrl-btn ctrl-btn-accent" title="Connect RTSP">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <label class="ctrl-btn upload-btn" title="Upload a demo video file">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Upload Video</span>
+                <input type="file" id="video-file" accept="video/*" hidden />
+              </label>
+              <div id="upload-status" class="upload-msg"></div>
+
+              <button id="btn-stop-camera" class="ctrl-btn ctrl-btn-danger" title="Disconnect camera" style="display:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+                <span>Stop Camera</span>
+              </button>
+            </div>
           </div>
-        </section>
+        </div>
 
         <!-- Filters -->
-        <section class="glass-panel control-section">
-          <h2>🎯 Filters & Options</h2>
-          <div class="filter-group">
-            <label>Event Type</label>
-            <div class="select-wrapper">
-              <select id="filter-event" class="glass-select">
+        <div class="nav-section">
+          <span class="nav-label">FILTERS</span>
+          <div class="filter-card">
+            <div class="filter-row">
+              <label for="filter-event">Event</label>
+              <select id="filter-event" class="ctrl-select">
                 <option value="">All Events</option>
                 <option value="INTRUSION">Intrusion</option>
                 <option value="LOITERING">Loitering</option>
                 <option value="RUNNING">Running</option>
                 <option value="FALL">Fall</option>
                 <option value="UNUSUAL_MOVEMENT">Unusual Movement</option>
+                <option value="KNOWN_PERSON">Known Person</option>
+                <option value="UNKNOWN_PERSON">Unknown Person</option>
               </select>
             </div>
-          </div>
-          <div class="filter-group">
-            <label>Severity</label>
-            <div class="select-wrapper">
-              <select id="filter-severity" class="glass-select">
+            <div class="filter-row">
+              <label for="filter-severity">Severity</label>
+              <select id="filter-severity" class="ctrl-select">
                 <option value="">All Severities</option>
                 <option value="critical">Critical</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
+                <option value="info">Info</option>
               </select>
             </div>
+            <div class="filter-actions">
+              <button id="refresh" class="ctrl-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                <span>Refresh</span>
+              </button>
+              <label class="auto-toggle">
+                <input type="checkbox" id="auto" checked />
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+                <span class="toggle-text">Auto</span>
+              </label>
+            </div>
           </div>
-          
-          <div class="action-row">
-            <button id="refresh" class="btn btn-secondary">🔄 Refresh</button>
-            <label class="toggle-switch">
-              <input type="checkbox" id="auto" checked />
-              <span class="slider"></span>
-              <span class="toggle-label">Auto-refresh</span>
-            </label>
-          </div>
-        </section>
+        </div>
 
-        <!-- Event Dictionary Legend -->
-        <section class="glass-panel control-section legend">
-          <h2>📖 Event Dictionary</h2>
+        <!-- Event Legend -->
+        <div class="nav-section">
+          <span class="nav-label">EVENT LEGEND</span>
           <ul class="legend-list">
-            <li><span class="dot dot-intrusion"></span> <strong>Intrusion</strong>: Enters forbidden zone.</li>
-            <li><span class="dot dot-loitering"></span> <strong>Loitering</strong>: Stays in zone too long.</li>
-            <li><span class="dot dot-running"></span> <strong>Running</strong>: Abnormal speed.</li>
-            <li><span class="dot dot-fall"></span> <strong>Fall</strong>: Sudden drop to ground.</li>
-            <li><span class="dot dot-unusual"></span> <strong>Unusual Mvmt</strong>: Erratic wandering.</li>
+            <li><span class="legend-dot" style="--dot-color: #f87171"></span><strong>Intrusion</strong><small>Forbidden
+                zone entry</small></li>
+            <li><span class="legend-dot" style="--dot-color: #facc15"></span><strong>Loitering</strong><small>Prolonged
+                lingering</small></li>
+            <li><span class="legend-dot" style="--dot-color: #fb923c"></span><strong>Running</strong><small>Abnormal
+                speed</small></li>
+            <li><span class="legend-dot" style="--dot-color: #fb7185"></span><strong>Fall</strong><small>Sudden ground
+                drop</small></li>
+            <li><span class="legend-dot" style="--dot-color: #a78bfa"></span><strong>Unusual</strong><small>Erratic
+                wandering</small></li>
+            <li><span class="legend-dot" style="--dot-color: #4ade80"></span><strong>Known</strong><small>Recognized
+                face</small></li>
+            <li><span class="legend-dot" style="--dot-color: #ef4444"></span><strong>Unknown</strong><small>Unrecognized
+                face</small></li>
           </ul>
-        </section>
-      </aside>
+        </div>
+      </div>
 
-      <!-- Main Content / Data Table -->
-      <main class="main-content glass-panel">
-        <div class="table-header">
-          <h2>Live Security Events</h2>
-          <div class="live-indicator">
-            <div class="pulse-dot"></div> Live Monitoring
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <div class="status-indicator" id="system-health-dot"></div>
+          <span class="nav-text">System Online</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-area">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open sidebar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <h1 class="page-title">Command Center</h1>
+        </div>
+        <div class="top-bar-right">
+          <div class="live-badge">
+            <span class="live-pulse"></span>
+            LIVE
+          </div>
+          <div class="clock" id="clock"></div>
+        </div>
+      </header>
+
+      <!-- Stat Cards -->
+      <section class="stats-row" id="stats-row">
+        <div class="stat-card" data-type="total">
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-total">—</span>
+            <span class="stat-label">Total Events</span>
+          </div>
+        </div>
+        <div class="stat-card" data-type="critical">
+          <div class="stat-icon critical">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-critical">—</span>
+            <span class="stat-label">Critical</span>
+          </div>
+        </div>
+        <div class="stat-card" data-type="intrusion">
+          <div class="stat-icon intrusion">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-intrusion">—</span>
+            <span class="stat-label">Intrusions</span>
+          </div>
+        </div>
+        <div class="stat-card" data-type="faces">
+          <div class="stat-icon faces">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-faces">—</span>
+            <span class="stat-label">Face Events</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Grid -->
+      <section class="content-grid">
+        <!-- Live Video Panel -->
+        <div class="video-panel glass-card" id="video-panel">
+          <div class="panel-header">
+            <h2>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" />
+              </svg>
+              Live Surveillance Feed
+            </h2>
+            <div class="panel-actions">
+              <button class="icon-btn" id="btn-fullscreen" title="Toggle fullscreen">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <img src="/video_feed" id="live-video" alt="Live Surveillance Feed" />
+            <div class="video-overlay">
+              <span class="video-rec">● REC</span>
+            </div>
           </div>
         </div>
 
-        <!-- Live Video Stream Feed -->
-        <div class="video-feed-container" style="text-align:center; margin-bottom: 20px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);">
-            <img src="/video_feed" id="live-video" style="max-width: 100%; max-height: 50vh; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" alt="Live Surveillance Feed" />
+        <!-- Events Table Panel -->
+        <div class="events-panel glass-card" id="events-panel">
+          <div class="panel-header">
+            <h2>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Security Events
+            </h2>
+            <span class="event-counter" id="event-counter">0 events</span>
+          </div>
+          <div class="table-responsive">
+            <table id="events-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Timestamp</th>
+                  <th>Camera</th>
+                  <th>Subject</th>
+                  <th>Event</th>
+                  <th>Severity</th>
+                  <th>Confidence</th>
+                  <th>Details</th>
+                  <th>Snapshot</th>
+                </tr>
+              </thead>
+              <tbody id="events-body">
+                <tr class="placeholder-row">
+                  <td colspan="9">
+                    <div class="empty-state">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                        opacity="0.3">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      <p>Waiting for events…</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
+    </main>
+  </div>
 
-        <div class="table-responsive">
-          <table id="events-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Time</th>
-                <th>Camera</th>
-                <th>Subject</th>
-                <th>Event</th>
-                <th>Severity</th>
-                <th>Confidence</th>
-                <th>Explanation</th>
-                <th>Snapshot</th>
-              </tr>
-            </thead>
-            <tbody id="events-body">
-              <!-- JS Populated -->
-            </tbody>
-          </table>
-        </div>
-      </main>
-    </div>
-
-    <!-- Event Detail Modal (Glassmorphic) -->
-    <div class="modal" id="modal">
-      <div class="modal-content glass-panel">
-        <div class="modal-header">
-          <h2 id="modal-title">Event Details</h2>
-          <button class="close-btn" id="modal-close">&times;</button>
-        </div>
-        <div id="modal-body" class="modal-body scrollable"></div>
+  <!-- ===== EVENT DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-dialog glass-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Event Details</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
+      <div id="modal-body" class="modal-body"></div>
     </div>
+  </div>
 
-    <script src="/static/app.js"></script>
-  </body>
+  <script src="/static/app.js"></script>
+</body>
+
 </html>

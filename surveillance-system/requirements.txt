@@ -13,6 +13,6 @@ pillow==10.2.0
 requests==2.31.0
 python-telegram-bot==20.7
 captum==0.7.0
-torch==2.2.1
-torchvision==0.17.1
+torch==2.5.0
+torchvision==0.18.0
 pygame==2.5.2

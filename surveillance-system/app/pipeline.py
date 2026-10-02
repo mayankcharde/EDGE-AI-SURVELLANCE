@@ -634,7 +634,8 @@ class SurveillancePipeline:
                 etype = ev['type']
 
                 # Audible alarm for high-priority events
-                self._play_alarm(etype)
+                if ev['person'] == 'Unknown':
+                    self._play_alarm(etype)
 
                 # Save one snapshot per event type per frame
                 if etype not in snapshots_this_frame:

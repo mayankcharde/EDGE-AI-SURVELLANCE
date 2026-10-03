@@ -66,8 +66,8 @@ def send_telegram(message, snapshot_path=None):
 
 
 def dispatch_alert(event_id, person, event_type, explanation, snapshot_path=None):
-    if person != "Unknown":
-        logger.info(f"Skipping alert dispatch for known person: {person}")
+    if person != "Unknown" and event_type == "KNOWN_PERSON":
+        logger.info(f"Skipping alert dispatch for routine known person detection: {person}")
         return
 
     subject = f"[Surveillance] {event_type} - {person}"

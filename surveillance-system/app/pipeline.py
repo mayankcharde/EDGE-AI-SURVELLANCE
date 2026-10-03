@@ -482,6 +482,7 @@ class SurveillancePipeline:
 
         self._voters: dict[int, _TrackVoter] = {}
         self._STALE_FRAMES = 30
+        self._latest_behavior = {}
 
         os.makedirs(SNAPSHOT_DIR, exist_ok=True)
 
@@ -498,6 +499,7 @@ class SurveillancePipeline:
         self.is_file     = is_file
         self.behavior    = BehaviorAnalyzer()
         self._voters     = {}
+        self._latest_behavior = {}
         self.frame_count = 0
         self.latest_frame = None
         self._latest_jpeg = None
@@ -545,7 +547,7 @@ class SurveillancePipeline:
             logger.debug(f'Alarm play failed: {e}')
 
     # ── Drawing ─────────────────────────────────────────────────────
-    def _draw_box(self, frame, x1, y1, x2, y2, name, tid, conf):
+    def _draw_box(self, frame, x1, y1, x2, y2, name, tid, conf, behavior_text=""):
         """Draw a highly visible bounding box with filled label."""
         is_known = name != 'Unknown'
 
@@ -572,6 +574,9 @@ class SurveillancePipeline:
             label += f'  {conf*100:.0f}%'
         elif not is_known:
             label += '  ⚠ UNKNOWN'
+            
+        if behavior_text:
+            label += f' | {behavior_text}'
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         fs   = 0.62
@@ -619,8 +624,6 @@ class SurveillancePipeline:
             # Majority-vote result for stable label
             name, confidence = voter.result()
 
-            self._draw_box(frame, x1, y1, x2, y2, name, tid, confidence)
-
             # ── Behavior analysis (keyword args — matches new signature) ──
             events = self.behavior.analyze(
                 track_id=tid,
@@ -630,12 +633,26 @@ class SurveillancePipeline:
                 det_confidence=conf,
             )
 
+            # Determine behavior string for the label
+            if tid not in self._latest_behavior:
+                self._latest_behavior[tid] = {"text": "", "time": 0}
+            
+            for ev in events:
+                etype = ev['type']
+                if etype not in ["KNOWN_PERSON", "UNKNOWN_PERSON"]:
+                    self._latest_behavior[tid] = {"text": etype, "time": time.time()}
+            
+            behavior_text = ""
+            if time.time() - self._latest_behavior.get(tid, {}).get("time", 0) < 3.0:
+                behavior_text = self._latest_behavior[tid]["text"]
+
+            self._draw_box(frame, x1, y1, x2, y2, name, tid, confidence, behavior_text)
+
             for ev in events:
                 etype = ev['type']
 
                 # Audible alarm for high-priority events
-                if ev['person'] == 'Unknown':
-                    self._play_alarm(etype)
+                self._play_alarm(etype)
 
                 # Save one snapshot per event type per frame
                 if etype not in snapshots_this_frame:
@@ -671,6 +688,7 @@ class SurveillancePipeline:
         ]
         for tid in stale:
             self._voters.pop(tid, None)
+            self._latest_behavior.pop(tid, None)
             self.behavior.forget_track(tid)
 
         return frame

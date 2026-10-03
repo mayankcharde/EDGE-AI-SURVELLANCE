@@ -821,7 +821,7 @@ class BehaviorAnalyzer:
                 severity="high",
                 person=person_name,
                 confidence=0.95,
-                explanation=f"{person_name} entered the restricted zone.",
+                explanation=f"Intrusion (Forbidden zone entry): {person_name} entered the restricted zone.",
                 meta={
                     "feet_px": [int(sm_feet_x), int(sm_feet_y)],
                     "zone_px": [int(v) for v in zone_px],
@@ -862,7 +862,7 @@ class BehaviorAnalyzer:
                     person=person_name,
                     confidence=0.90,
                     explanation=(
-                        f"{person_name} loitering in restricted zone "
+                        f"Loitering (Prolonged lingering): {person_name} loitering in restricted zone "
                         f"for {dwell:.1f}s at {speed_bl_per_sec:.2f} bl/s."
                     ),
                     meta={
@@ -895,7 +895,7 @@ class BehaviorAnalyzer:
                 person=person_name,
                 confidence=0.85,
                 explanation=(
-                    f"{person_name} running at "
+                    f"Running (Abnormal speed): {person_name} running at "
                     f"{speed_bl_per_sec:.2f} body-lengths/s."
                 ),
                 meta={"speed_bl_per_sec": round(speed_bl_per_sec, 2)},
@@ -946,7 +946,7 @@ class BehaviorAnalyzer:
                         person=person_name,
                         confidence=0.92,
                         explanation=(
-                            f"{person_name} appears to have fallen "
+                            f"Fall (Sudden ground drop): {person_name} appears to have fallen "
                             f"(wide pose for {wide_dur:.1f}s, "
                             f"feet dropped {drop_frac*100:.1f}% of frame)."
                         ),
@@ -998,7 +998,7 @@ class BehaviorAnalyzer:
                 person=person_name,
                 confidence=0.80,
                 explanation=(
-                    f"{person_name} showing erratic movement "
+                    f"Unusual (Erratic wandering): {person_name} showing erratic movement "
                     f"(tortuosity {tortuosity:.2f})."
                 ),
                 meta={
@@ -1033,7 +1033,7 @@ class BehaviorAnalyzer:
                     severity="info",
                     person=person_name,
                     confidence=det_confidence,
-                    explanation=f"Known person recognized: {person_name}.",
+                    explanation=f"Known (Recognized face): Known person recognized: {person_name}.",
                     meta={"track_id": int(track_id)},
                     xai_text=(
                         f"Face embedding matched the enrolled profile "
@@ -1062,7 +1062,7 @@ class BehaviorAnalyzer:
                     severity="high",
                     person="Unknown",
                     confidence=det_confidence,
-                    explanation="Unknown person detected in the footage.",
+                    explanation="Unknown (Unrecognized face): Unknown person detected in the footage.",
                     meta={"track_id": int(track_id)},
                     xai_text=(
                         f"Face could not be matched to any enrolled profile "

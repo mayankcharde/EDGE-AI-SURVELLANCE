@@ -118,18 +118,23 @@
       const res = await fetch("/api/events?" + params.toString());
       const data = await res.json();
 
-      // Check for new UNKNOWN_PERSON events
+      // Check for new alerts
       if (data && data.length > 0) {
-        const newUnknowns = data.filter(
-          (e) => e.event === "UNKNOWN_PERSON" && e.id > lastUnknownEventId
+        const newEvents = data.filter(
+          (e) => e.event !== "KNOWN_PERSON" && e.id > lastUnknownEventId
         );
-        if (newUnknowns.length > 0) {
-          lastUnknownEventId = Math.max(...newUnknowns.map((e) => e.id));
+        if (newEvents.length > 0) {
+          lastUnknownEventId = Math.max(...newEvents.map((e) => e.id));
           playAlertSound();
-          showToast(
-            `${newUnknowns.length} unknown person${newUnknowns.length > 1 ? "s" : ""} detected!`,
-            "danger"
-          );
+          
+          // Show up to 3 toasts to avoid spam
+          newEvents.slice(0, 3).forEach(e => {
+            let msg = `${formatEventName(e.event)} detected!`;
+            if (e.person && e.person !== "Unknown") {
+               msg = `${e.person}: ${msg}`;
+            }
+            showToast(msg, e.severity === "critical" ? "danger" : "warning");
+          });
         }
       }
 
